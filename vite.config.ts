@@ -74,4 +74,11 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  // Railway serves the built app via `vite preview` on a *.up.railway.app host.
+  // Vite's preview server only allows localhost by default, which makes the
+  // Railway edge reject the host with a 403. Allow any host so deploys work.
+  preview: {
+    host: '0.0.0.0',
+    allowedHosts: true,
+  },
 });
