@@ -6,8 +6,10 @@ import {
 } from 'lucide-react';
 import { useStations, usePriceHistory, useReviews, useMedianPrice } from '@/hooks/useStations';
 import { PriceHistoryChart } from '@/components/PriceHistoryChart';
+import { FuelAdvisor } from '@/components/FuelAdvisor';
 import { PriceForm, AmenityForm } from '@/components/SubmissionForm';
 import { centsPerLitreToDollars, formatKm, lastVerifiedLabel, priceColor } from '@/lib/utils';
+import { buildSignal } from '@/lib/prediction';
 import { AMENITY_LABELS, Amenities } from '@/types';
 
 type Tab = 'overview' | 'submit';
@@ -92,6 +94,9 @@ export function StationDetailPage() {
               <h2 className="mb-2 text-sm font-bold text-slate-200">Price history</h2>
               <PriceHistoryChart prices={prices ?? []} />
             </section>
+
+            {/* smart fill-now-or-wait advisor */}
+            <FuelAdvisor signal={buildSignal(prices ?? [])} />
 
             {/* amenities checklist */}
             <section className="card p-4">
