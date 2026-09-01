@@ -71,24 +71,32 @@ The "AI" — a **transparent, deterministic model**, not a black box. It answers
 
 ## Live fuel-price data (the "smart prices" source)
 
-The app has **two data layers**. The **prediction model** runs on top of **real historical prices**.
+The app has **two data layers**. The **prediction model** runs on top of **real historical prices**. And now — with fuel shortages prompting every state/territory to publish its own price data — we can pull **real government data from multiple free state feeds**, no scraping, no faking.
 
-### Free / official feeds
-| Feed | Coverage | Access |
+### National multi-source feed (per-state free government data)
+| State | Source | Access |
 |---|---|---|
-| **NSW FuelCheck API** | ~2,500 NSW stations, live retail | Free — register an API key at [api.nsw.gov.au](https://api.nsw.gov.au/Product/Index/22) |
-| **WA FuelWatch** | WA, mandated daily | Free (fuelwatch.wa.gov.au) |
-| **AIP Terminal Gate Price** | National wholesale baseline ≈ 95% of retail | Free (aip.com.au) |
-| **Your community** | Stations no feed covers | Fuel Credits reward |
+| **NSW + ACT + TAS** | FuelCheck API (`api.nsw.gov.au`, v2 serves all three) | Free key |
+| **VIC** | Servo Saver / Fair Fuel Open Data API (`data.vic.gov.au`) | Free key |
+| **QLD** | fuelpricesqld.com.au / `data.qld.gov.au` (API + CSV) | Free sign-up |
+| **WA** | FuelWatch (`fuelwatch.wa.gov.au`, `data.wa.gov.au`) | Free, public |
+| **SA / NT** | (no clean statewide API — commercial aggregator covers them, OR community submissions) | — |
+| **Anywhere** | CheckPetrol / FuelPrice Australia | Commercial, one key, ~9,700 stations |
 
-The ingestion lives in [`supabase/functions/sync-prices/index.ts`](supabase/functions/sync-prices/index.ts) — a Supabase **Edge Function** that pulls NSW FuelCheck prices and upserts `stations` + `prices`. Run it on a cron (every 30–60 min):
+The ingestion lives in [`supabase/functions/sync-prices/index.ts`](supabase/functions/sync-prices/index.ts) — a **pluggable multi-source feeder** with a per-state **adapter**. Each adapter activates when its key is set; adapters that have no key gracefully return `[]`. Run it on a cron every 30–60 min:
 
 ```bash
 supabase functions deploy sync-prices
-supabase secrets set NSW_FUELCHECK_KEY=... NSW_FUELCHECK_SECRET=...
+supabase secrets set \
+  NSW_FUELCHECK_KEY=... NSW_FUELCHECK_SECRET=... \
+  VIC_FAIRFUEL_KEY=... \
+  QLD_KEY=... \
+  SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=...
+# optional single-key national connector:
+#   CHECKPETROL_KEY=...
 ```
 
-> ⚠️ **Honest note:** NSW FuelCheck requires a **free registered API key** (Basic auth consumer key/secret) — the standard, documented path. Until that key is set, the app uses its mock data. **CheckPetrol** (`checkpetrol.com.au/api`) is a commercial aggregator that unlocks **national** coverage with one key — the natural 1.0 upgrade.
+> ⚠️ **Honest note:** there is **no single free national feed** — each state is its own registration. The trade-off is: free-per-state (a few sign-ups) vs. one commercial key (CheckPetrol/FuelPrice Australia) for instant national coverage. Both paths are wired; pick whichever fits. Until any key is set, the app uses its realistic mock data.
 
 ### Prediction model (the actual "AI")
 - `forecastPrice()` — linear trend + a sinusoidal weekly-cycle term, scaled to the station's observed amplitude.
