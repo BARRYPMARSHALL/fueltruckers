@@ -36,10 +36,12 @@ The "AI" — a **transparent, deterministic model**, not a black box. It answers
 - **Detail** — full amenity checklist, price-history sparkline, driver reviews, **Navigate**, **Submit price / update amenities**.
 - **Net-savings ranking** — true cost after detour, not just the sticker price.
 
-### 4. Community + Fuel Credits
-- Submit a price (with optional pump photo) or an amenity report.
+### 4. Community + Fuel Credits (one-tap price snap)
+- **Geofence-triggered price snap** — when you're ~400m from a known station, the app pings "Snap the board." Shoot the price board → **OCR reads the digits** → auto-submit. One photo, zero typing.
+- **Feed verification** — every snap is cross-checked against the state feed / local median; a wildly-off price is flagged for review, keeping the crowd data trustworthy.
 - Each **verified submission earns a 50¢ Fuel Credit** off the $30/month subscription.
 - Auto-approved for the MVP; queued offline and **background-synced** when back online.
+- **Leaderboard** — per-corridor reputation ("King of the Hume") + a share of the monthly prize pool.
 
 ### 5. Savings dashboard & subscription
 - Estimated **monthly diesel saving** + **net-after-subscription** economics.
@@ -115,7 +117,7 @@ npm run dev      # http://localhost:5173
 
 ### 2. Wire Supabase
 1. Create a project at supabase.com → copy **Project URL** + **anon key** (*Settings → API*).
-2. **SQL Editor** → run [`supabase/migrations/001_schema.sql`](supabase/migrations/001_schema.sql) (tables, RLS, triggers, `award_fuel_credit`).
+2. **SQL Editor** → run [`supabase/migrations/001_schema.sql`](supabase/migrations/001_schema.sql) (tables, RLS, triggers, `award_fuel_credit`), then [`supabase/migrations/002_gamification.sql`](supabase/migrations/002_gamification.sql) (contributions, leaderboard view, verified-price crediting).
 3. Run [`supabase/seed.sql`](supabase/seed.sql) (46 AU truck stops + prices).
 4. `.env`:
    ```env
@@ -145,6 +147,9 @@ npm run dev      # http://localhost:5173
 
 ### Railway (recommended — static + PWA)
 The repo ships a [`railway.json`](railway.json) (Nixpacks: `npm install && npm run build`, serve `dist/`, healthcheck) and a `Procfile`.
+
+> ⚠️ **Railway needs an authenticated session.** The repo is pushed to GitHub and Railway-ready, but `railway up` requires `railway login` (interactive browser OAuth) first — run that once, then `railway up`. I can't do the browser login for you.
+
 1. **New Project → Deploy from GitHub** → `BARRYPMARSHALL/fueltruckers`.
 2. Add env vars (service → *Variables*) **before** deploying (they bake in at build):
    ```env

@@ -8,6 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useMedianPrice } from '@/hooks/useStations';
 import { estimateMonthlySavings, estimateMonthlyLitres, centsPerLitreToDollars } from '@/lib/utils';
 import { createCheckoutSession, PLAN } from '@/lib/stripe';
+import { Leaderboard } from '@/components/Leaderboard';
 
 export function DashboardPage() {
   const { profile, usingSupabase, logout } = useAuth();
@@ -106,6 +107,9 @@ export function DashboardPage() {
           </div>
           <p className="mt-2 text-xs text-slate-500">Submit verified prices &amp; amenities to earn more — every one is worth 50¢ toward your next payment.</p>
         </section>
+
+        {/* Community leaderboard */}
+        <Leaderboard />
 
         {/* Subscription status + CTA */}
         <section className="card p-4 space-y-3">
