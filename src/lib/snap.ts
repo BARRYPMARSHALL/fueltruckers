@@ -2,7 +2,11 @@
 // The core "contribute with one tap" flow. A trucker snaps the price board,
 // we OCR the digits, cross-check against the known price range / state feed,
 // and return a confident price (or ask for a confirm). Reward = instant credit.
-import { createWorker } from 'tesseract.js';
+//
+// OCR strategy: prefer the SERVER-side Edge Function (supabase/functions/
+// ocr-price) so the driver's phone doesn't ship the heavy Tesseract WASM.
+// Falls back to in-app tesseract.js when the Function is unreachable.
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from './env';
 
 export interface SnapResult {
   ok: boolean;
@@ -18,14 +22,51 @@ export interface SnapResult {
 const DIESEL_CENT_MIN = 120;
 const DIESEL_CENT_MAX = 260;
 
+/** Server-side OCR via the Supabase Edge Function (preferred). */
+async function ocrServer(dataUrl: string): Promise<SnapResult> {
+  const fnBase = SUPABASE_URL ? `${SUPABASE_URL.replace(/\/$/, '')}/functions/v1` : '';
+  if (!fnBase) return { ok: false, message: 'no supabase url' };
+  const res = await fetch(`${fnBase}/ocr-price`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY ?? ''}`,
+    },
+    body: JSON.stringify({ image: dataUrl }),
+  });
+  if (!res.ok) throw new Error(`ocr-price HTTP ${res.status}`);
+  const data = await res.json();
+  if (!data.ok) return { ok: false, message: data.error ?? 'OCR failed', rawText: data.rawText };
+  return {
+    ok: true,
+    priceCentsPerLitre: data.priceCentsPerLitre,
+    confidence: data.confidence,
+    needsConfirm: data.needsConfirm,
+    message: data.needsConfirm
+      ? `Read ${data.priceCentsPerLitre} c/L — confirm it looks right?`
+      : `Read ${data.priceCentsPerLitre} c/L`,
+    rawText: data.rawText,
+  };
+}
+
 /**
  * Run OCR on a screenshot/camera image of a fuel price board and return the
- * best candidate diesel price. Filters digit-like runs and picks the value in
- * the plausible range.
+ * best candidate diesel price. Tries the server function first, then the
+ * in-app WASM OCR.
  */
 export async function snapPriceFromImage(dataUrl: string): Promise<SnapResult> {
+  // 1) Server-side (preferred — fast, no WASM on the client).
+  try {
+    const server = await ocrServer(dataUrl);
+    if (server.ok) return server;
+  } catch {
+    // fall through to in-app OCR
+  }
+
+  // 2) In-app fallback.
   let raw = '';
   try {
+    const { createWorker } = await import('tesseract.js');
     const worker = await createWorker('eng', 1, { logger: () => {} });
     const { data } = await worker.recognize(dataUrl);
     raw = data.text ?? '';
@@ -47,7 +88,6 @@ export async function snapPriceFromImage(dataUrl: string): Promise<SnapResult> {
     return { ok: false, message: "Couldn't read the price. Try a clearer photo.", rawText: raw };
   }
 
-  // If the number is a dollars figure like 1.85, convert to c/L (=185).
   const priceCents = best < DIESEL_CENT_MIN ? Math.round(best * 100) : Math.round(best);
   const needsConfirm = !(priceCents >= 160 && priceCents <= 220);
 

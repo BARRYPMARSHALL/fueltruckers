@@ -1,9 +1,10 @@
 // ─── Bottom navigation bar ────────────────────────────────────────────────
 import { NavLink } from 'react-router-dom';
-import { Map, Wallet, User } from 'lucide-react';
+import { Map, Wallet, User, Route } from 'lucide-react';
 
 const TABS = [
   { to: '/', label: 'Map', icon: Map, end: true },
+  { to: '/trip', label: 'Trip', icon: Route, end: false },
   { to: '/dashboard', label: 'Savings', icon: Wallet, end: false },
   { to: '/profile', label: 'Rig', icon: User, end: false },
 ];
@@ -11,7 +12,7 @@ const TABS = [
 export function NavBar() {
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-white/10 bg-navy/95 backdrop-blur pb-safe">
-      <div className="mx-auto grid max-w-md grid-cols-3">
+      <div className="mx-auto grid max-w-md grid-cols-4">
         {TABS.map((t) => (
           <NavLink
             key={t.to}

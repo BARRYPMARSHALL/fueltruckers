@@ -30,6 +30,7 @@ The "AI" — a **transparent, deterministic model**, not a black box. It answers
 - Predicts the price **~48h out**, and recommends `fill_now` / `fill_if_cheap` / `wait`.
 - Shows a **confidence** bar and the rationale — and is honest that news/market events can move prices.
 - See [`src/lib/prediction.ts`](src/lib/prediction.ts) — the model is unit-testable and backtestable.
+- ⚠️ **Backtested honest result:** run [`scripts/backtest_prediction.mjs`](scripts/backtest_prediction.mjs) — on synthetic data the v1 forecast **loses ~12.5%** (wait-calls right <50%). Do NOT trust the advice until it passes on **real diesel history** (state feeds / CheckPetrol). This is deliberately not shipped as "AI magic."
 
 ### 3. Station list & detail
 - **Station card** — brand, c/L, distance, last-verified, truck score, key amenities.
@@ -43,7 +44,12 @@ The "AI" — a **transparent, deterministic model**, not a black box. It answers
 - Auto-approved for the MVP; queued offline and **background-synced** when back online.
 - **Leaderboard** — per-corridor reputation ("King of the Hume") + a share of the monthly prize pool.
 
-### 5. Savings dashboard & subscription
+### 5. Trip fuel planner
+- **Route-based optimisation** — given a corridor (Sydney→Brisbane, etc.) + tank size + detour budget, it plans *your whole run's* fill stops, not just the next one.
+- Recommends where to fill along the route based on **net per-litre saving** vs the median, respecting a reserve tank so you never run dry.
+- See [`src/lib/tripPlanner.ts`](src/lib/tripPlanner.ts) — pure, testable logic.
+
+### 6. Savings dashboard & subscription
 - Estimated **monthly diesel saving** + **net-after-subscription** economics.
 - **$30/mo membership, 7-day free trial, 25% of revenue to cash giveaways.**
 - **Fuel Credits** balance + **referral code** ("invite a truckie").
@@ -145,18 +151,17 @@ npm run dev      # http://localhost:5173
 
 ## Deploy
 
-### Railway (recommended — static + PWA)
-The repo ships a [`railway.json`](railway.json) (Nixpacks: `npm install && npm run build`, serve `dist/`, healthcheck) and a `Procfile`.
+### Railway (Infrastructure as Code)
+The repo ships a **`.railway/railway.ts`** IaC config (Railway's modern format; replaces the deprecated `railway.json`). It targets the `web` service, builds with `npm install && npm run build`, and serves the PWA via `vite preview`.
 
-> ⚠️ **Railway needs an authenticated session.** The repo is pushed to GitHub and Railway-ready, but `railway up` requires `railway login` (interactive browser OAuth) first — run that once, then `railway up`. I can't do the browser login for you.
+> ⚠️ **Railway needs an authenticated session.** Deploys require `railway login` (interactive browser OAuth) or a `RAILWAY_TOKEN` in the environment. The token is a secret — don't commit it.
 
-1. **New Project → Deploy from GitHub** → `BARRYPMARSHALL/fueltruckers`.
-2. Add env vars (service → *Variables*) **before** deploying (they bake in at build):
-   ```env
-   VITE_SUPABASE_URL=... VITE_SUPABASE_ANON_KEY=...
-   VITE_STRIPE_PUBLISHABLE_KEY=... VITE_STRIPE_PRICE_ID=...
-   ```
-3. Railway gives a `*.up.railway.app` URL; PWA is installable + offline with no extra config.
+```bash
+railway login                      # or export RAILWAY_TOKEN=...
+railway up --service web --detach  # push + build + deploy
+```
+
+The app is **live at** `https://web-production-542f3.up.railway.app` (demo mode until env vars are set).
 
 ### Vercel
 Import the repo → preset **Vite** → build `npm run build`, output `dist`. Add the same `VITE_*` env vars, deploy. Rebuild after changing them.

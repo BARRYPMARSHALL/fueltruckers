@@ -10,6 +10,7 @@ import { StationDetailPage } from '@/pages/StationDetailPage';
 import { DashboardPage } from '@/pages/DashboardPage';
 import { ProfilePage } from '@/pages/ProfilePage';
 import { AuthPage } from '@/pages/AuthPage';
+import { TripPlannerPage } from '@/pages/TripPlannerPage';
 import { applyTheme, useSettings } from '@/stores/settingsStore';
 import { flushOfflineQueue } from '@/lib/backgroundSync';
 
@@ -65,6 +66,14 @@ export function App() {
           element={
             <ProtectedRoute>
               <AppShell><DashboardPage /></AppShell>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/trip"
+          element={
+            <ProtectedRoute>
+              <AppShell><TripPlannerPage /></AppShell>
             </ProtectedRoute>
           }
         />
