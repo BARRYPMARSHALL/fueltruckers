@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base ─────────────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-navy text-slate-100 antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* Big, high-contrast focus ring for accessibility */
+  :focus-visible {
+    @apply outline-none ring-2 ring-hi ring-offset-2 ring-offset-navy;
+  }
+}
+
+/* ─── Reusable component classes ────────────────────────────────────── */
+@layer components {
+  .card {
+    @apply rounded-2xl bg-navy-light/60 border border-white/10 shadow-lg;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-semibold
+      transition-colors select-none;
+  }
+  .chip-active {
+    @apply bg-hi text-navy;
+  }
+  .chip-inactive {
+    @apply bg-navy-lighter/70 text-slate-300 border border-white/10;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 font-semibold
+      transition-colors active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none;
+  }
+  .btn-primary {
+    @apply btn bg-hi text-navy hover:bg-hi-light;
+  }
+  .btn-outline {
+    @apply btn border border-white/15 text-slate-100 hover:bg-white/5;
+  }
+  .btn-ghost {
+    @apply btn text-slate-300 hover:bg-white/5;
+  }
+  .badge {
+    @apply inline-flex items-center rounded-md px-2 py-0.5 text-xs font-bold;
+  }
+  .label {
+    @apply block text-sm font-medium text-slate-300 mb-1.5;
+  }
+  .input {
+    @apply w-full rounded-xl border border-white/10 bg-navy-lighter/60 px-4 py-3 text-base
+      text-slate-100 placeholder-slate-500 focus:border-hi;
+  }
+  .skeleton {
+    @apply animate-pulse rounded-xl bg-navy-lighter/50;
+  }
+}
+
+/* ─── Leaflet overrides (dark, high-contrast) ───────────────────────── */
+.leaflet-container {
+  @apply bg-navy-lighter;
+  font-family: inherit;
+}
+.leaflet-control-attribution {
+  background: rgba(15, 23, 42, 0.7) !important;
+  color: #94a3b8 !important;
+  font-size: 10px !important;
+}
+.leaflet-control-attribution a {
+  color: #94a3b8 !important;
+}
+.leaflet-control-zoom a {
+  background: #1e293b !important;
+  color: #e2e8f0 !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Custom price marker */
+.price-marker {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 30px;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: 12px;
+  color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -100%);
+  text-align: center;
+}
+.price-marker::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  transform: translateX(-50%);
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 7px solid rgba(0, 0, 0, 0.85);
+}
+.price-marker.selected {
+  transform: translate(-50%, -100%) scale(1.15);
+  z-index: 500;
+}
+
+/* Bottom sheet */
+.sheet-handle {
+  @apply mx-auto h-1.5 w-10 rounded-full bg-white/20;
+}
+
+/* Safe-area padding for mobile (PWA) */
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Hide horizontal scrollbar but keep scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
