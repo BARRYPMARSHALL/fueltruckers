@@ -98,7 +98,34 @@ npm run typecheck  # tsc -b (no emit)
 
 ---
 
-## How to build & deploy (Vercel recommended)
+## Railway deployment (recommended, static + PWA)
+
+The repo is **Railway-ready** via [`railway.json`](railway.json) (Nixpacks) and a `Procfile`. It builds the Vite app and serves the built PWA with `npm run preview`.
+
+1. Push the repo to GitHub (see below), then in Railway: **New Project → Deploy from GitHub repo**.
+2. Railway reads `railway.json` → `npm install && npm run build`, then serves `dist/` on `$PORT`.
+3. **Add environment variables** under the service → *Variables*:
+   ```env
+   VITE_SUPABASE_URL=...
+   VITE_SUPABASE_ANON_KEY=...
+   VITE_STRIPE_PUBLISHABLE_KEY=...
+   VITE_STRIPE_PRICE_ID=...
+   ```
+   > `VITE_*` vars bake in at build time — set them **before** deploying, then trigger a redeploy.
+4. Railway gives you a `*.up.railway.app` URL. The PWA is installable + offline with zero extra config.
+
+### Push to GitHub
+
+```bash
+git init -b main          # (if not already)
+git add -A && git commit -m "FuelTruckers MVP"
+git remote add origin git@github.com:<you>/fueltruckers.git
+git push -u origin main
+```
+
+---
+
+## How to build & deploy (Vercel)
 
 1. Push the repo to GitHub.
 2. Import into **Vercel** (or `vercel`).
